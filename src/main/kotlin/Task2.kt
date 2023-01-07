@@ -1,5 +1,4 @@
 package ru.netology
-import kotlin.math.roundToInt
 
 fun main() {
     println(calcAmount("Mastercard", 500000.0, 100001.0))
