@@ -1,37 +1,47 @@
 package ru.netology
 
+import kotlin.math.max
+
 fun main() {
-    println(calcAmount("Mastercard", 500000.0, 100001.0))
+    println(calcAmount("Visa", 500_000, 100_001))
 }
 
-fun calcAmount(cartType: String = "VK Pay", previousTransfers: Double = 0.0, transferAmount: Double): Double {
-    val commission: Double = when (cartType) {
-        "Mastercard", "Maestro" -> getCommissionMastercardMaestro(previousTransfers, transferAmount) // Оплата комиссии необходима только в случае если превышен лимит в 600000 в месяц
-        "Visa", "Мир" -> getCommissionVisaMir(transferAmount) // Всегда одна и та же комиссия, лимит не влияет ни на что
-        "VK Pay" -> 0.0 // Всегда без комиссии
+fun calcAmount(cartType: String = "VK Pay", previousTransfers: Int = 0, transferAmount: Int): Int {
+    val commission: Int = when (cartType) {
+        "Mastercard", "Maestro" -> getCommissionMastercardMaestro(previousTransfers, transferAmount)
+        "Visa", "Мир" -> getCommissionVisaMir(previousTransfers, transferAmount)
+        "VK Pay" -> 0
         else -> {
             println("Данный тип карты/счёта $cartType не подерживаются системой")
-            return 0.0
+            -1
         }
     }
-    return transferAmount + commission
+    return if (commission == -1) 0 else transferAmount + commission
 }
 
-fun getCommissionMastercardMaestro(previousTransfers: Double, transferAmount: Double): Double {
-    val limit = 600000
+fun getCommissionMastercardMaestro(previousTransfers: Int, transferAmount: Int): Int {
+    val limitFirst = 75_000
+    val limitSecond = 600_000
     val commission = 0.006
     val commissionPart = 20
-    if (transferAmount + previousTransfers > limit) {
-        return transferAmount * commission + commissionPart
+    return when(previousTransfers + transferAmount) {
+        in 0 until limitFirst -> 0
+        in limitFirst until limitSecond -> (transferAmount * commission + commissionPart).toInt()
+        else -> {
+            println("Лимит по переводам в этом месяце превышен")
+            -1
+        }
     }
-    return 0.0
 }
 
-fun getCommissionVisaMir(transferAmount: Double): Double {
+fun getCommissionVisaMir(previousTransfers: Int, transferAmount: Int): Int {
+    val limit = 600_000
     val commission = 0.0075
-    val minCommission = 35.0
-    if (transferAmount * commission > minCommission) {
-        return transferAmount * commission
+    val minCommission = 35
+    return if (previousTransfers + transferAmount > limit) {
+        println("Лимит по переводам в этом месяце превышен")
+        -1
+    } else {
+        max(minCommission,(transferAmount * commission).toInt())
     }
-    return minCommission
 }
